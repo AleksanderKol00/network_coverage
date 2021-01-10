@@ -2,7 +2,7 @@
 
 ## Getting Started
 ### Settings
-To run project required's to add json with settings (template in `settings_template.json`) and add file path to
+To run project required is to add json with settings (template in `settings_template.json`) and add file path to
 env variable `NETWORK_COVERAGE_SETTINGS`
 
 ### Installing
@@ -12,7 +12,12 @@ env variable `NETWORK_COVERAGE_SETTINGS`
  pip install -r requirements.txt
 ```
 
+### Running dev server
+```
+python3 manage.py runserver
+```
+
 ### Running api tests
 ```angular2html
- python3 network_coverage/manage.py test api
+ python3 manage.py test api.tests
 ```
