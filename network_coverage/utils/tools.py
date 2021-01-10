@@ -26,8 +26,7 @@ def get_city_by_gps_cord(cords: Coordinates) -> str:
     response = requests.get(urljoin(API_ADDRESS_URL, "reverse"), params={"lon": cords.longitude, "lat": cords.latitude})
     city = ""
     if len(response.json()["features"]) > 1:
-        raise RuntimeError # TODO
+        raise RuntimeError("Didn't return proper addresses")
     elif response.json()["features"]:
         city = response.json()["features"][0]["properties"]["city"]
-        print(city+"\n") #TODO
     return city
