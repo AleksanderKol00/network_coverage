@@ -2,30 +2,29 @@ import csv
 from urllib.parse import urljoin
 
 import requests
-from dataclasses import dataclass
 from django.http.response import JsonResponse
 from django.views import View
 
+from api.static import NetworkCoverage
+from logger import logger
 from network_coverage.settings import OPERATORS_CSV_PATH
 from utils.static import API_ADDRESS_URL
-
-
-@dataclass
-class NetworkCoverage:
-    n_2G: bool
-    n_3G: bool
-    n_4G: bool
 
 
 class NetworkCoverageView(View):
     def get(self, request, *args, **kwargs):
         query_params = request.GET.get("q")
-        response = requests.get(urljoin(API_ADDRESS_URL, "search"), params={"q": query_params})
-        cities = set([feature["properties"]["city"] for feature in response.json()["features"]])
+        try:
+            cities = self.find_cities(query_params)
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Get error from search address API: {e}")
+            return JsonResponse({"ERROR_CODE": "Error occurred."})
+        logger.info(f"Matched cities: {cities}")
         if len(cities) != 1:
             return JsonResponse({"ERROR_CODE": "Wrong geographic match"})
         city_match = list(cities)[0]
         operator_coverage = self.find_operator_coverage(city=city_match)
+        logger.info(f"Operator coverage results: {operator_coverage}")
         return JsonResponse(operator_coverage)
 
     def find_operator_coverage(self, city: str):
@@ -64,3 +63,10 @@ class NetworkCoverageView(View):
                 "4G": network_coverage.n_4G,
             }
         return operator_coverage_results
+
+    @staticmethod
+    def find_cities(query_params: str):
+        response = requests.get(urljoin(API_ADDRESS_URL, "search"), params={"q": query_params})
+        response.raise_for_status()
+        logger.info(f"Response from address API: {response.json()}")
+        return set([feature["properties"]["city"] for feature in response.json()["features"]])
